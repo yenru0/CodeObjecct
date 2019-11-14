@@ -2,9 +2,9 @@ yenru0 code storage
 ===
 ## 기본 사항
 
-`zeta`는 BOJ입니다.
+`zeta`는 [BOJ](https://www.acmicpc.net/)입니다.
 
-`codeup`은 코드업입니다.
+`codeup`은 [코드업](https://codeup.kr/)입니다.
 
 `PCC`는 *킹서노*썜이 주신 책에서 영감을 받거나 베낀것입니다.
 

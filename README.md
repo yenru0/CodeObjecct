@@ -19,7 +19,7 @@ yenru0 code storage
 코딩의 편리함을 위한 `stdin.txt`! 이것은 매우 중요 especially 쓰다 C로 because 나 not 편함
 
 ## completed
-내가 **납득**되거나 내가 해결한 문제는 `/completed`로 이동됩니다. __관짝__
+내가 **납득**되거나 내가 해결한 문제는 `/completed`로 이동됩니다. ~~관짝~~
 
 ㄹㅇ 내가 못 품이 지속되거나 혹은 난제같은 것은 `/incomplete`로 이동됩니다.
 다만, 그냥 내가 관심을 안줘서 해결되지 않은 문제는 `/`에 있을 예정입니다.

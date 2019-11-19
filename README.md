@@ -13,6 +13,7 @@ yenru0 code storage
 작성언어 | 파일 뒤 | 확장자
 :---:|:---:|:---:
  C | C | .c
+ C++ | cpp | .cpp
  Python | python | .py
  
 ## stdin.txt

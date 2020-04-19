@@ -1,0 +1,1 @@
+print(round((2*(int(input())-1)/6)**(1/2)+1))

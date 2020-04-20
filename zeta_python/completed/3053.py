@@ -1,6 +1,3 @@
-"""
-
-"""
 import math
 r = int(input())
 print("%.6f"%round(r**2*math.pi,6))

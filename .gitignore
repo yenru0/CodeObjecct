@@ -1,4 +1,7 @@
 .idea/
+
 output/
+out/
+
 venv
 .venv

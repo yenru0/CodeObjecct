@@ -16,7 +16,7 @@ kl = len(K)
 
 def check_possibility(l):
     wbr = []
-    for num in range(1, 10):
+    for num in range(9, 0, -1):
         if num in Map[K[l][0]]:
             continue
         elif num in (Map[i][K[l][1]] for i in range(9)):

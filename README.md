@@ -16,6 +16,7 @@ yenru0 code storage
  C++ | cpp | .cpp
  Python | python | .py
  Kotlin | kotlin | .kt
+ Lua | lua | .lua
  
 ## stdin.txt
 코딩의 편리함을 위한 `stdin.txt`! 이것은 매우 중요 especially 쓰다 C로 because 나 not 편함

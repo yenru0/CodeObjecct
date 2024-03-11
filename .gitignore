@@ -10,3 +10,6 @@ venv
 
 __init__.py
 **/test_*.py
+
+*.exe
+a.out

@@ -11,5 +11,7 @@ venv
 __init__.py
 **/test_*.py
 
+
+cmake-build-debug
 *.exe
 a.out

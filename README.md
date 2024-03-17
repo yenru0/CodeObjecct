@@ -18,6 +18,9 @@ yenru0 code storage
  Kotlin | kotlin | .kt
  Lua | lua | .lua
 
+* C++17
+* C99
+
 ## completed or incompleted
 내가 **납득**되거나 내가 해결한 문제는 `/completed`로 이동됩니다. ~~관짝~~
 

@@ -15,3 +15,8 @@ __init__.py
 cmake-build-debug
 *.exe
 a.out
+
+META-INF
+*.class
+a.jar
+

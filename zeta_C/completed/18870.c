@@ -44,17 +44,14 @@ void compress(int N, Honeycomb *arr) {
     }
 
     qsort(arr, N, sizeof(Honeycomb), compare_loc);
-    return;
 }
 
+// C11(Clang)에서 런타임에러: 백준 clang에서 qsort가 정렬을 제대로 하지 못하는 문제
 int main() {
     int N;
     scanf("%d", &N);
     Honeycomb *arr;;
-    if ((arr = (Honeycomb *) calloc(N, sizeof(Honeycomb))) == NULL) {
-        printf("NULL");
-        return 1;
-    }
+    arr = (Honeycomb *) calloc(N, sizeof(Honeycomb));
     for (int i = 0; i < N; i++) {
         scanf("%d", &arr[i].x);
         arr[i].loc = i;

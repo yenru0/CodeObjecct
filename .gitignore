@@ -21,3 +21,4 @@ META-INF
 *.class
 a.jar
 
+_testcases/*

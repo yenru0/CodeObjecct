@@ -4,11 +4,11 @@ yenru0 code storage
 
 폴더명 `{identifier}_{language}`
 
-`zeta`는 [BOJ](https://www.acmicpc.net/)입니다.
+`identifier`의 종류는 다음과 같음.
 
-`codeup`은 [코드업](https://codeup.kr/)입니다.
+* `zeta`는 [BOJ](https://www.acmicpc.net/)입니다.
 
-이 뒤에 오는 것들은 작성 언어입니다. 다음은 현재까지 작성된 언어의 예시.
+`language`는 작성 언어로 현재까지 작성된 언어 및 예시는 다음과 같음.
 
 작성언어 | 폴더 뒤 | 확장자
 :---:|:---:|:---:
@@ -18,14 +18,14 @@ yenru0 code storage
  Kotlin | kotlin | .kt
  Lua | lua | .lua
 
+std
 * C++17
-* C99
+* C11
 
 ## completed or incompleted
-내가 **납득**되거나 내가 해결한 문제는 `/completed`로 이동됩니다. ~~관짝~~
+내가 **납득**되거나 내가 해결한 문제는 `/completed`로 이동됩니다.
 
-내가 못 풀것 같은 것은 `/incompleted`로 이동됩니다.
-다만, 그냥 내가 관심을 안줘서 해결되지 않은 문제는 `/`에 있을 예정입니다.
+해결되지 않은 문제는 `/`에 있을 예정입니다.
 
 ## 시간 측정
 ### python

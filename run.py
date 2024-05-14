@@ -27,7 +27,7 @@ class ProblemRunEnum:
     zeta_C: ProblemRunType = ProblemRunType(
         name="zeta_C",
         dir="./zeta_C",
-        runner="gcc -std=c11 {source} && ./a.out < {input}",
+        runner="gcc -std=c11 {source} && a.out",
         prefix="c",
     )
     zeta_cpp: ProblemRunType = ProblemRunType(

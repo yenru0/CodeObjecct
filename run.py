@@ -6,6 +6,8 @@ from dataclasses import dataclass
 import re
 import subprocess
 
+import click
+
 TC_TARGET_DIR = "./_testcases"
 
 
@@ -15,6 +17,7 @@ class ProblemRunType:
     dir: str
     runner: str
     prefix: str
+    prerunner: str = ""
 
 
 class ProblemRunEnum:
@@ -27,24 +30,29 @@ class ProblemRunEnum:
     zeta_C: ProblemRunType = ProblemRunType(
         name="zeta_C",
         dir="./zeta_C",
-        runner="gcc -std=c11 {source} && a.out",
+        runner="./a.out",
         prefix="c",
+        prerunner="gcc -std=c11 {source}",
     )
     zeta_cpp: ProblemRunType = ProblemRunType(
         name="zeta_cpp",
         dir="./zeta_cpp",
-        runner="g++ -std=c++17 {source} && ./a.out < {input}",
+        runner="./a.out",
         prefix="cpp",
+        prerunner="g++ -std=c++17 {source}",
     )
     zeta_kotlin: ProblemRunType = ProblemRunType(
         name="zeta_kotlin",
         dir="./zeta_kotlin",
-        runner="kotlinc-jvm {source} -include-runtime -d a.jar && java -jar a.jar -Dfile.encoding=UTF-8 < {input}",
+        runner="java -jar a.jar -Dfile.encoding=UTF-8 < {input}",
         prefix="kt",
+        prerunner="kotlinc-jvm {source} -include-runtime -d a.jar",
     )
+    # WIP
     zeta_lua: ProblemRunType = ProblemRunType(
         name="zeta_lua", dir="./zeta_lua", runner="", prefix="lua"
     )
+    # ExceptionType
     err: ProblemRunType = ProblemRunType(name="err", dir="", runner="", prefix="")
 
     @staticmethod
@@ -64,102 +72,126 @@ class ProblemRunEnum:
                 return ProblemRunEnum.err
 
 
-if __name__ == "__main__":
-    rtype: ProblemRunType
-    problem_code: int
-    cnt: int
-    verbose_flag: bool = False
-    match len(sys.argv):
-        case 3:
-            rtype = ProblemRunEnum.quicklink(sys.argv[1])
-            problem_code = sys.argv[2] if sys.argv[2].isdigit() else None
-            cnt = 1
+@click.group()
+def cli():
+    pass
 
-        case 4:
-            rtype = ProblemRunEnum.quicklink(sys.argv[1])
-            problem_code = int(sys.argv[2]) if sys.argv[2].isdigit() else None
-            if sys.argv[3] == "--verbose":
-                verbose_flag = True
-                cnt = 1
-            else:
-                cnt = (
-                    int(sys.argv[3])
-                    if sys.argv[3].isdigit() and int(sys.argv[3]) > 0
-                    else 1
-                )
-        case 5:
-            rtype = ProblemRunEnum.quicklink(sys.argv[1])
-            problem_code = int(sys.argv[2]) if sys.argv[2].isdigit() else None
 
-            cnt = (
-                int(sys.argv[3])
-                if sys.argv[3].isdigit() and int(sys.argv[3]) > 0
-                else 1
-            )
+@click.command()
+@click.argument("runtype_string", type=str, nargs=1, required=True)
+@click.argument("problem_code", type=str, nargs=1, required=True)
+@click.argument("count", type=int, nargs=1, required=False, default=1)
+@click.option("--verbose", "-v", is_flag=True)
+@click.option("--profile", "-p", is_flag=True)
+def run(
+    runtype_string: str, problem_code: str, count: int, verbose: bool, profile: bool
+):
+    runtype: ProblemRunType = ProblemRunEnum.quicklink(runtype_string)
+    if runtype is ProblemRunEnum.err:
+        raise click.UsageError("Error RUNTYPE.")
 
-            if sys.argv[4] == "--verbose":
-                verbose_flag = True
-            else:
-                pass
-        case _:
-            print("Invalid argument count.")
-            sys.exit()
+    if count < 1:
+        raise click.UsageError("COUNT must be greater than 1.")
 
-    if rtype is ProblemRunEnum.err:
-        print(f"Invalid run type: `{sys.argv[1]}`.")
-        sys.exit()
+    problem_code_path = f"{runtype.dir}/{problem_code}.{runtype.prefix}"
 
-    problem_code_path = f"{rtype.dir}/{problem_code}.{rtype.prefix}"
     if not os.path.exists(problem_code_path):
-        print(f"Invalid problem code: `{problem_code}`")
-        sys.exit()
+        raise click.UsageError("Problem does not exist.")
 
-    io_files: list[str] = [
+    tc_files: list[str] = [
         fpath
         for fpath in os.listdir(TC_TARGET_DIR)
         if os.path.isfile(os.path.join(TC_TARGET_DIR, fpath))
     ]
 
-    for c in range(1, cnt + 1):
-        inputs = None
-        outputs = []
-        for name in io_files:
+    for c in range(1, count + 1):
+        inpf = None
+        outputfs = []
+        for name in tc_files:
             ix = re.match(f"{c}.in", name)
             ox = re.match(f"{c}.out[0-9]*", name)
             if ix:
-                inputs = name
+                inpf = name
             elif ox:
-                outputs.append(name)
-        if (not inputs) or (not outputs):
-            print(f"{c:02d}: Pass")
+                outputfs.append(name)
+
+        if (not inpf) or (not outputfs):
+            click.echo(f"{c:02d}: {None}")
             continue
         else:
-            with open(os.path.join(TC_TARGET_DIR, inputs), 'r', encoding='utf-8') as inputf:
-                stdout = subprocess.run(
-                    rtype.runner.format(
-                        source=problem_code_path, input= os.path.join(TC_TARGET_DIR, inputs)
-                    ).split(),
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                    stdin = inputf
-                ).stdout
+            # check
+            with open(os.path.join(TC_TARGET_DIR, inpf), "r", encoding="utf-8") as f:
+                if runtype.prerunner:
+                    try:
+                        _ = subprocess.run(
+                            runtype.prerunner.format(
+                                source=problem_code_path,
+                            ).split(),
+                            check=True,
+                            capture_output=True,
+                            text=True,
+                        )
+                    except subprocess.CalledProcessError as e:
+                        click.echo(">>>>>> [Error while PRERUNNER process] >>>>>>")
+                        click.echo(f"{e.stderr}")
+                        click.echo(">>>>>> [Error while PRERUNNER process] >>>>>>")
+                        continue
+                try:
+                    stdout = subprocess.run(
+                        runtype.runner.format(
+                            source=problem_code_path,
+                        ).split(),
+                        check=True,
+                        capture_output=True,
+                        text=True,
+                        stdin=f,
+                    ).stdout
+                except subprocess.CalledProcessError as e:
+                    click.echo(">>>>>> [Error while RUNNER process] >>>>>>")
+                    click.echo(f"{e.stderr}")
+                    click.echo(f"returncode: {e.returncode}")
+                    click.echo(">>>>>> [Error while RUNNER process] >>>>>>")
+                    stdout = ""
+                    continue
 
-            flag = False
-            for outputpath in outputs:
-                with open(
-                    os.path.join(TC_TARGET_DIR, outputpath), "r", encoding="utf-8"
-                ) as f:
-                    if stdout.strip() == f.read().strip():
-                        flag = True
-                        break
+                flag = False
+                for outputpath in outputfs:
+                    with open(
+                        os.path.join(TC_TARGET_DIR, outputpath), "r", encoding="utf-8"
+                    ) as f:
+                        if stdout.strip() == f.read().strip():
+                            flag = True
+                            break
 
-            print(f"{c:02d}: {flag}")
-            if verbose_flag:
-                print("===")
-                print(stdout)
-                print("===")
+                click.echo(f"{c:02d}: {flag}")
+                if verbose:
+                    click.echo("===" * 3)
+                    click.echo(stdout)
+                    click.echo("===" * 3)
 
 
-### TODO: --profile argument 추가를 위한 command dispatcher 개선
-### TODO: WIP
+@click.command(name="init")
+@click.argument("count", type=int)
+def init(count: int):
+    if count < 1:
+        raise click.UsageError("COUNT must be greater than 1.")
+    else:
+        if not os.path.exists("./" + TC_TARGET_DIR):
+            os.mkdir(TC_TARGET_DIR)
+        for i in range(1, count + 1):
+            default_in_path = "./" + TC_TARGET_DIR + f"/{i}.in"
+            default_out_path = "./" + TC_TARGET_DIR + f"/{i}.out"
+            with open(default_in_path, "w", encoding="utf-8") as _:
+                pass
+
+            with open(default_out_path, "w", encoding="utf-8") as _:
+                pass
+
+        click.echo("Testcases was made successfully!")
+
+
+cli.add_command(run)
+cli.add_command(init)
+
+if __name__ == "__main__":
+    cli()

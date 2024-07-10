@@ -32,14 +32,14 @@ class ProblemRunEnum:
         dir="./zeta_C",
         runner="./a.out",
         prefix="c",
-        prerunner="gcc -std=c11 {source}",
+        prerunner="gcc {source} -std=gnu11 -lm -Wall",
     )
     zeta_cpp: ProblemRunType = ProblemRunType(
         name="zeta_cpp",
         dir="./zeta_cpp",
         runner="./a.out",
         prefix="cpp",
-        prerunner="g++ -std=c++17 {source}",
+        prerunner="g++ {source} -std=c++17 -lm -Wall",
     )
     zeta_kotlin: ProblemRunType = ProblemRunType(
         name="zeta_kotlin",

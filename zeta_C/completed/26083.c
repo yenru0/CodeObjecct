@@ -56,7 +56,7 @@ int valid(Date *x, Date now) {
     }
     if (x->year < now.year) {
         return 0;
-    } else if(x->year > now.year) {
+    } else if (x->year > now.year) {
         return 1;
     }
 
@@ -64,11 +64,11 @@ int valid(Date *x, Date now) {
         return 0;
     } else if (x->month > now.month) {
         return 1;
-    } 
+    }
 
-    if(x->day < now.day) {
+    if (x->day < now.day) {
         return 0;
-    } else if(x->day >= now.day) {
+    } else if (x->day >= now.day) {
         return 1;
     }
 

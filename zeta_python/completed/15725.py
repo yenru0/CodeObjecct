@@ -1,0 +1,1 @@
+print((lambda x: x[0] if len(x) > 1 else 0)(list(map(lambda x: 1 if x == '' else -1 if x == '-' else int(x), input().split('x')))))

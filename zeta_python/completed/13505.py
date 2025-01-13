@@ -4,7 +4,7 @@ input = sys.stdin.readline
 
 
 def get_max_xor(N, S):
-    trie = [[0, 0] for _ in range(150000)]
+    trie = [[0, 0] for _ in range(3000000)]
 
     cnt = 0
     for s in S:
@@ -27,12 +27,16 @@ def get_max_xor(N, S):
         flag = False
 
         if trie[idx1][0] and trie[idx2][1]:
-            D.append((depth + 1, trie[idx1][0], trie[idx2][1], xor + 1 << (29 - depth)))
+            D.append(
+                (depth + 1, trie[idx1][0], trie[idx2][1], xor + (1 << (29 - depth)))
+            )
             flag = True
         if trie[idx1][1] and trie[idx2][0]:
-            D.append((depth + 1, trie[idx1][1], trie[idx2][0], xor + 1 << (29 - depth)))
+            D.append(
+                (depth + 1, trie[idx1][1], trie[idx2][0], xor + (1 << (29 - depth)))
+            )
             flag = True
-        print(D)
+
         if flag:
             continue
 
@@ -40,7 +44,6 @@ def get_max_xor(N, S):
             D.append((depth + 1, trie[idx1][0], trie[idx2][0], xor))
         if trie[idx1][1] and trie[idx2][1]:
             D.append((depth + 1, trie[idx1][1], trie[idx2][1], xor))
-    print(n)
     return max(n)
 
 

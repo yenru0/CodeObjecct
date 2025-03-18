@@ -45,9 +45,9 @@ class ProblemRunEnum:
     zeta_kotlin: ProblemRunType = ProblemRunType(
         name="zeta_kotlin",
         dir="./zeta_kotlin",
-        runner="java -jar a.jar -Dfile.encoding=UTF-8",
+        runner="java -Xms2G -Xmx4G -Xss1G -Dfile.encoding=UTF-8 -jar a.jar",
         prefix="kt",
-        prerunner="kotlinc-jvm {source} -include-runtime -d a.jar",
+        prerunner="kotlinc-jvm {source} -J-Xms2G -J-Xmx4G -J-Xss1G -include-runtime -d a.jar",
     )
     # WIP
     zeta_lua: ProblemRunType = ProblemRunType(

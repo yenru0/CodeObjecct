@@ -3,6 +3,7 @@
 
 output/
 out/
+build/
 
 venv
 .venv
@@ -22,3 +23,6 @@ META-INF
 a.jar
 
 _testcases/*
+
+.gradle
+.idea

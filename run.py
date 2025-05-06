@@ -20,7 +20,7 @@ class ProblemRunType:
     prefix: str
     prerunner: str = ""
 
-
+    
 class ProblemRunEnum:
     zeta_python: ProblemRunType = ProblemRunType(
         name="zeta_python",
@@ -53,6 +53,15 @@ class ProblemRunEnum:
     zeta_lua: ProblemRunType = ProblemRunType(
         name="zeta_lua", dir="./zeta_lua", runner="", prefix="lua"
     )
+
+    zeta_rust: ProblemRunType = ProblemRunType(
+        name="zeta_rust",
+        dir="./zeta_rust",
+        runner="./a.out",
+        prefix="rs",
+        prerunner="rustc --edition 2021 -O -o a.out {source}",
+    )
+
     # ExceptionType
     err: ProblemRunType = ProblemRunType(name="err", dir="", runner="", prefix="")
 
@@ -61,14 +70,16 @@ class ProblemRunEnum:
         match link.lower().replace("-", "").replace("_", ""):
             case "zetapython" | "bojpython" | "bojpy" | "zetapy" | "zpy":
                 return ProblemRunEnum.zeta_python
-            case "zeta_c" | "zetac" | "boj_c" | "bojc" | "zc":
+            case "zetac" | "bojc" | "zc":
                 return ProblemRunEnum.zeta_C
-            case "zeta_cpp" | "zetacpp" | "boj_cpp" | "bojcpp" | "zcpp":
+            case "zetacpp" | "bojcpp" | "zcpp":
                 return ProblemRunEnum.zeta_cpp
-            case "zeta_lua" | "zetalua" | "boj_lua" | "bojlua" | "zlua":
+            case "zetalua" | "bojlua" | "zlua":
                 return ProblemRunEnum.zeta_lua
-            case "zetakotlin" | "bojkotlin" | "zetakt" | "bojkt" | "zkt":
+            case "zetakotlin" | "zetakt" | "bojkotlin" | "bojkt" | "zkt" | "zkotlin":
                 return ProblemRunEnum.zeta_kotlin
+            case "zetarust" | "zetars" | "zrs" | "zrust" | "bojrs" | "bojrust":
+                return ProblemRunEnum.zeta_rust
             case _:
                 return ProblemRunEnum.err
 

@@ -12,5 +12,6 @@ int fib(int n) {
 int main() {
     int temp;
     scanf("%d", &temp);
-    printf("%d", fib(temp));
+    printf("%d\n", fib(temp));
+    return 0;
 }

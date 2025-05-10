@@ -25,3 +25,9 @@ a.jar
 _testcases/*
 
 .gradle
+
+__pycache__
+
+*.pyc
+
+target

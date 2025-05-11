@@ -8,7 +8,8 @@ build/
 venv
 .venv
 
-src/*
+src/**/*
+!**/.gitkeep
 
 
 .ipynb_checkpoints

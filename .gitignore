@@ -8,6 +8,9 @@ build/
 venv
 .venv
 
+src/*
+
+
 .ipynb_checkpoints
 
 __init__.py

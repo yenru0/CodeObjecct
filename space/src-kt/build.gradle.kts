@@ -1,6 +1,3 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
-
-
 plugins {
     val kotlinVersion = "1.9.10"
     kotlin("jvm") version kotlinVersion
@@ -52,6 +49,9 @@ tasks.named<Jar>("jar") {
     manifest {
         attributes["Main-Class"] = "MainKt"
     }
+    from(configurations.runtimeClasspath.get().map { if(it.isDirectory) it else zipTree(it)})
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
     finalizedBy("copyJarToBuild")
 }
 

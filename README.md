@@ -35,15 +35,19 @@ yenru0 code storage
 * `run`
 
 ```sh
-# workspace로 불러오는 file
-run load 1000 to py # load 1000.py from python repository
-# if there loaded file
-run load 1000.py # run type inference by extension
-run load 1000.py from zeta # default is `zeta`/*
-run load 1000.rs from zeta/c-
-run load 1000.rs from zet
 
-run export 1000.py --to zeta/completed
+# 테스트 케이스 생성 with count=5
+run init 5
+
+# workspace로 불러오는 file
+run load 1000 --to py # load 1000.py from python source space
+# if there loaded file
+run load 1000.py # language inference by extension
+run load 1000.py --from zeta
+run load 1000.rs --from zeta --force # already in src space force overwrite
+
+
+run export --from c --completed
 
 run time rust.it
 

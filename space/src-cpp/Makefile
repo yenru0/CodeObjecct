@@ -8,6 +8,8 @@ BUILD_DIR = ../../build
 
 OUTPUT = cpp.out
 
+all: build
+
 build:
 	$(CC) -o $(BUILD_DIR)/$(OUTPUT) -O2 -Wall -lm --std=c++17 -fsanitize=address,leak,undefined $(SRC_DIR)/$(TARGET)
 

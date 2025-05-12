@@ -203,13 +203,15 @@ def run(from_: str, target: str, verbose: bool):
     # build
 
     try:
-        subprocess.run(
+        s = subprocess.run(
             from_language.build_command,
             check=True,
             capture_output=True,
             text=True,
             cwd=from_language.working_dir,
         )
+        print(s.stderr)
+        
     except subprocess.CalledProcessError as e:
         click.echo(">>>>>> [Error while BUILD process] >>>>>>")
         raise click.ClickException(e.stderr)

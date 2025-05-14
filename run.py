@@ -50,7 +50,7 @@ class Language(Enum):
                 "build",
             ],
             Language.RUST: [
-                "cargo",
+                "make",
                 "build",
             ],
             Language.KOTLIN: [

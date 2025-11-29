@@ -38,3 +38,5 @@ target
 
 state.yml
 config.yml
+
+.python-version

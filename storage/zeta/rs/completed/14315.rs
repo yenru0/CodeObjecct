@@ -1,0 +1,1 @@
+fn main(){let s=std::io::read_to_string(std::io::stdin()).unwrap();let mut i=s.split_whitespace().flat_map(str::parse::<u64>);for j in 1..=i.next().unwrap(){let p=i.next().unwrap().min(i.next().unwrap());println!("Case #{j}: {}",p*p+p>>1)}}

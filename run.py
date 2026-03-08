@@ -125,6 +125,11 @@ class Language(Enum):
                 return Language.UNDEFINED
 
 
+def natural_sort_key(s: str):
+    """Natural sort key: splits string into text/number chunks for proper ordering."""
+    return [int(c) if c.isdigit() else c.lower() for c in re.split(r'(\d+)', s)]
+
+
 def parse_range_string(range_str):
     try:
         if range_str.startswith(".."):
@@ -452,13 +457,18 @@ def state():
         click.secho("state.space has no member", fg="yellow", bold=True)
         state["space"] = {}
 
+    active = sum(1 for v in state["space"].values() if v)
+    total = len(state["space"])
+    click.secho(f"Space: {active}/{total} active", fg="cyan", bold=True)
+    click.echo()
+
     for k, v in state["space"].items():
+        click.secho(f"  {k}/", fg="yellow")
         if not v:
-            print(f"{k}: _")
+            click.echo(f"    {click.style('—', fg='bright_black')} empty")
         else:
-            print(
-                f"{k}: {v['file']}.{k} @ {v['location']}{'/completed' if v['is_completed'] else ''}"
-            )
+            status = click.style("✓", fg="green") if v['is_completed'] else click.style("○", fg="white")
+            click.echo(f"    {status} {v['file']}.{k} @ {v['location']}")
 
 
 @click.command(name="init")
@@ -500,11 +510,202 @@ def init(count: int):
         click.echo("2-2. config.yml exists")
 
 
+@click.command(name="show")
+@click.argument("filter", type=str, default=None, required=False)
+@click.option("--completed/--no-completed", "-c/-nc", default=False, help="Filter by completed status (default: uncompleted only)")
+@click.option("--all", "show_all", is_flag=True, default=False, help="Show all problems regardless of completed status")
+def show(filter: str | None, completed: bool, show_all: bool):
+    """
+    Show all stored problems in storage directory.
+
+    \b
+    FILTER format (optional):
+      location        e.g. zeta
+      location/lang   e.g. zeta/rs
+      /lang           e.g. /py
+    """
+    location = None
+    lang = None
+    if filter:
+        parts = filter.split("/", 1)
+        if len(parts) == 2:
+            location = parts[0] or None
+            lang = parts[1] or None
+        else:
+            location = parts[0]
+
+    storage = pathlib.Path(STORAGE_DIR)
+    if not storage.is_dir():
+        raise click.ClickException(f"Storage directory '{STORAGE_DIR}' not found")
+
+    # Collect all files
+    entries = []  # (location, language, filename, is_completed)
+
+    for loc_dir in sorted(storage.iterdir()):
+        if not loc_dir.is_dir():
+            continue
+        loc_name = loc_dir.name
+
+        if location and loc_name != location:
+            continue
+
+        for lang_dir in sorted(loc_dir.iterdir()):
+            if not lang_dir.is_dir():
+                continue
+            lang_name = lang_dir.name
+
+            if lang and lang_name != Language.convert_name(lang).value and lang_name != lang:
+                continue
+
+            # uncompleted files
+            for f in sorted(lang_dir.iterdir(), key=lambda p: natural_sort_key(p.stem)):
+                if f.is_file():
+                    entries.append((loc_name, lang_name, f.stem, False))
+
+            # completed files
+            completed_dir = lang_dir / "completed"
+            if completed_dir.is_dir():
+                for f in sorted(completed_dir.iterdir(), key=lambda p: natural_sort_key(p.stem)):
+                    if f.is_file():
+                        entries.append((loc_name, lang_name, f.stem, True))
+
+    # Filter by completed status
+    if not show_all:
+        entries = [e for e in entries if e[3] == completed]
+
+    if not entries:
+        click.echo("No problems found.")
+        return
+
+    # Display
+    total = len(entries)
+    completed_count = sum(1 for e in entries if e[3])
+    uncompleted_count = total - completed_count
+
+    click.secho(f"Total: {total} (completed: {completed_count}, uncompleted: {uncompleted_count})", fg="cyan", bold=True)
+    click.echo()
+
+    # Group by location
+    current_loc = None
+    current_lang = None
+    for loc_name, lang_name, file_name, is_completed in entries:
+        if loc_name != current_loc:
+            current_loc = loc_name
+            current_lang = None
+            click.secho(f"[{loc_name}]", fg="green", bold=True)
+
+        if lang_name != current_lang:
+            current_lang = lang_name
+            click.secho(f"  {lang_name}/", fg="yellow")
+
+        status = click.style("✓", fg="green") if is_completed else click.style("○", fg="white")
+        click.echo(f"    {status} {file_name}.{lang_name}")
+
+
+@click.command(name="find")
+@click.argument("keyword", type=str)
+@click.option("--completed/--no-completed", "-c/-nc", default=None, help="Filter by completed status (default: all)")
+def find(keyword: str, completed: bool | None):
+    """
+    Find problems by keyword in storage.
+
+    KEYWORD format:
+      keyword              e.g. 2447
+      keyword.ext          e.g. 2447.py  (filters by language)
+      .ext                 e.g. .py      (all files of a language)
+      location/keyword     e.g. zeta/2447
+      location/keyword.ext e.g. zeta/2447.py
+      location/.ext        e.g. zeta/.py
+    """
+    location = None
+    lang = None
+    if "/" in keyword:
+        parts = keyword.split("/", 1)
+        location = parts[0] or None
+        keyword = parts[1]
+
+    # Extract language from extension
+    if "." in keyword:
+        keyword_base, ext = keyword.rsplit(".", 1)
+        lang_candidate = Language.convert_ext(ext)
+        if lang_candidate is not Language.UNDEFINED:
+            lang = lang_candidate.value
+        else:
+            keyword_base = keyword
+    else:
+        keyword_base = keyword
+
+    storage = pathlib.Path(STORAGE_DIR)
+    if not storage.is_dir():
+        raise click.ClickException(f"Storage directory '{STORAGE_DIR}' not found")
+
+    entries = []  # (location, language, filename, is_completed)
+
+    for loc_dir in sorted(storage.iterdir()):
+        if not loc_dir.is_dir():
+            continue
+        loc_name = loc_dir.name
+
+        if location and loc_name != location:
+            continue
+
+        for lang_dir in sorted(loc_dir.iterdir()):
+            if not lang_dir.is_dir():
+                continue
+            lang_name = lang_dir.name
+
+            if lang and lang_name != lang:
+                continue
+
+            for f in lang_dir.iterdir():
+                if f.is_file() and keyword_base.lower() in f.stem.lower():
+                    entries.append((loc_name, lang_name, f.stem, False))
+
+            completed_dir = lang_dir / "completed"
+            if completed_dir.is_dir():
+                for f in completed_dir.iterdir():
+                    if f.is_file() and keyword_base.lower() in f.stem.lower():
+                        entries.append((loc_name, lang_name, f.stem, True))
+
+    if completed is not None:
+        entries = [e for e in entries if e[3] == completed]
+
+    entries.sort(key=lambda e: (e[0], e[1], natural_sort_key(e[2])))
+
+    if not entries:
+        click.echo("No problems found.")
+        return
+
+    total = len(entries)
+    completed_count = sum(1 for e in entries if e[3])
+    uncompleted_count = total - completed_count
+
+    click.secho(f"Found: {total} (completed: {completed_count}, uncompleted: {uncompleted_count})", fg="cyan", bold=True)
+    click.echo()
+
+    current_loc = None
+    current_lang = None
+    for loc_name, lang_name, file_name, is_completed in entries:
+        if loc_name != current_loc:
+            current_loc = loc_name
+            current_lang = None
+            click.secho(f"[{loc_name}]", fg="green", bold=True)
+
+        if lang_name != current_lang:
+            current_lang = lang_name
+            click.secho(f"  {lang_name}/", fg="yellow")
+
+        status = click.style("✓", fg="green") if is_completed else click.style("○", fg="white")
+        click.echo(f"    {status} {file_name}.{lang_name}")
+
+
 cli.add_command(run)
 cli.add_command(load)
 cli.add_command(init)
 cli.add_command(export)
 cli.add_command(state)
+cli.add_command(show)
+cli.add_command(find)
 
 if __name__ == "__main__":
     cli()

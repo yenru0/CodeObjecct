@@ -1,0 +1,1 @@
+fn main(){let t=std::io::read_to_string(std::io::stdin()).unwrap();let s=t.split_whitespace().last().unwrap();print!("{}", &s[s.len()-5..])}

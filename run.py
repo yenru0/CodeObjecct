@@ -15,6 +15,8 @@ STATE_PATH = "./state.yml"
 
 TC_DIR = "./_testcases"
 
+TEMPLATES_DIR = "./templates"
+
 SRC_SPACE_DIR = "./space"
 
 STORAGE_DIR = "./storage"
@@ -90,7 +92,7 @@ class Language(Enum):
 
     @staticmethod
     def convert_ext(ext: str):
-        match (ext):
+        match ext:
             case "py":
                 return Language.PYTHON
             case "c":
@@ -108,7 +110,7 @@ class Language(Enum):
 
     @staticmethod
     def convert_name(name: str):
-        match (name.lower()):
+        match name.lower():
             case "py" | "py3" | "python" | "python3":
                 return Language.PYTHON
             case "c":
@@ -127,7 +129,7 @@ class Language(Enum):
 
 def natural_sort_key(s: str):
     """Natural sort key: splits string into text/number chunks for proper ordering."""
-    return [int(c) if c.isdigit() else c.lower() for c in re.split(r'(\d+)', s)]
+    return [int(c) if c.isdigit() else c.lower() for c in re.split(r"(\d+)", s)]
 
 
 def parse_range_string(range_str):
@@ -216,7 +218,7 @@ def run(from_: str, target: str, verbose: bool):
             cwd=from_language.working_dir,
         )
         print(s.stderr)
-        
+
     except subprocess.CalledProcessError as e:
         click.echo(">>>>>> [Error while BUILD process] >>>>>>")
         raise click.ClickException(e.stderr)
@@ -349,11 +351,23 @@ def load(file: str, to: str, from_: str, force: bool):
             f_dst.write(f_src.read())
         os.remove(file_loc)
     else:
-        with open(
-            f"{SRC_SPACE_DIR}/src-{to_language.value}/src/main.{to_language.value}",
-            "wb",
-        ) as f_dst:
-            pass
+        if TEMPLATES_DIR and os.path.isfile(
+            f"{TEMPLATES_DIR}/template.{to_language.value}"
+        ):
+            with (
+                open(f"{TEMPLATES_DIR}/template.{to_language.value}", "rb") as f_src,
+                open(
+                    f"{SRC_SPACE_DIR}/src-{to_language.value}/src/main.{to_language.value}",
+                    "wb",
+                ) as f_dst,
+            ):
+                f_dst.write(f_src.read())
+        else:
+            with open(
+                f"{SRC_SPACE_DIR}/src-{to_language.value}/src/main.{to_language.value}",
+                "wb",
+            ) as f_dst:
+                pass
 
     with open("state.yml", "w", encoding="utf-8") as f:
         if lang_space_state is None:
@@ -421,9 +435,7 @@ def export(from_: str, completed: bool, copy: bool):
     if completed:
         s_is_completed = True
 
-    dest_path: str = (
-        f"{STORAGE_DIR}/{s_loc}/{from_language.value}{'/completed' if s_is_completed else ''}/{s_file}.{from_language.value}"
-    )
+    dest_path: str = f"{STORAGE_DIR}/{s_loc}/{from_language.value}{'/completed' if s_is_completed else ''}/{s_file}.{from_language.value}"
     source_path: str = (
         f"{SRC_SPACE_DIR}/src-{from_language.value}/src/main.{from_language.value}"
     )
@@ -467,7 +479,11 @@ def state():
         if not v:
             click.echo(f"    {click.style('—', fg='bright_black')} empty")
         else:
-            status = click.style("✓", fg="green") if v['is_completed'] else click.style("○", fg="white")
+            status = (
+                click.style("✓", fg="green")
+                if v["is_completed"]
+                else click.style("○", fg="white")
+            )
             click.echo(f"    {status} {v['file']}.{k} @ {v['location']}")
 
 
@@ -512,8 +528,19 @@ def init(count: int):
 
 @click.command(name="show")
 @click.argument("filter", type=str, default=None, required=False)
-@click.option("--completed/--no-completed", "-c/-nc", default=False, help="Filter by completed status (default: uncompleted only)")
-@click.option("--all", "show_all", is_flag=True, default=False, help="Show all problems regardless of completed status")
+@click.option(
+    "--completed/--no-completed",
+    "-c/-nc",
+    default=False,
+    help="Filter by completed status (default: uncompleted only)",
+)
+@click.option(
+    "--all",
+    "show_all",
+    is_flag=True,
+    default=False,
+    help="Show all problems regardless of completed status",
+)
 def show(filter: str | None, completed: bool, show_all: bool):
     """
     Show all stored problems in storage directory.
@@ -554,7 +581,11 @@ def show(filter: str | None, completed: bool, show_all: bool):
                 continue
             lang_name = lang_dir.name
 
-            if lang and lang_name != Language.convert_name(lang).value and lang_name != lang:
+            if (
+                lang
+                and lang_name != Language.convert_name(lang).value
+                and lang_name != lang
+            ):
                 continue
 
             # uncompleted files
@@ -565,7 +596,9 @@ def show(filter: str | None, completed: bool, show_all: bool):
             # completed files
             completed_dir = lang_dir / "completed"
             if completed_dir.is_dir():
-                for f in sorted(completed_dir.iterdir(), key=lambda p: natural_sort_key(p.stem)):
+                for f in sorted(
+                    completed_dir.iterdir(), key=lambda p: natural_sort_key(p.stem)
+                ):
                     if f.is_file():
                         entries.append((loc_name, lang_name, f.stem, True))
 
@@ -582,7 +615,11 @@ def show(filter: str | None, completed: bool, show_all: bool):
     completed_count = sum(1 for e in entries if e[3])
     uncompleted_count = total - completed_count
 
-    click.secho(f"Total: {total} (completed: {completed_count}, uncompleted: {uncompleted_count})", fg="cyan", bold=True)
+    click.secho(
+        f"Total: {total} (completed: {completed_count}, uncompleted: {uncompleted_count})",
+        fg="cyan",
+        bold=True,
+    )
     click.echo()
 
     # Group by location
@@ -598,13 +635,22 @@ def show(filter: str | None, completed: bool, show_all: bool):
             current_lang = lang_name
             click.secho(f"  {lang_name}/", fg="yellow")
 
-        status = click.style("✓", fg="green") if is_completed else click.style("○", fg="white")
+        status = (
+            click.style("✓", fg="green")
+            if is_completed
+            else click.style("○", fg="white")
+        )
         click.echo(f"    {status} {file_name}.{lang_name}")
 
 
 @click.command(name="find")
 @click.argument("keyword", type=str)
-@click.option("--completed/--no-completed", "-c/-nc", default=None, help="Filter by completed status (default: all)")
+@click.option(
+    "--completed/--no-completed",
+    "-c/-nc",
+    default=None,
+    help="Filter by completed status (default: all)",
+)
 def find(keyword: str, completed: bool | None):
     """
     Find problems by keyword in storage.
@@ -680,7 +726,11 @@ def find(keyword: str, completed: bool | None):
     completed_count = sum(1 for e in entries if e[3])
     uncompleted_count = total - completed_count
 
-    click.secho(f"Found: {total} (completed: {completed_count}, uncompleted: {uncompleted_count})", fg="cyan", bold=True)
+    click.secho(
+        f"Found: {total} (completed: {completed_count}, uncompleted: {uncompleted_count})",
+        fg="cyan",
+        bold=True,
+    )
     click.echo()
 
     current_loc = None
@@ -695,7 +745,11 @@ def find(keyword: str, completed: bool | None):
             current_lang = lang_name
             click.secho(f"  {lang_name}/", fg="yellow")
 
-        status = click.style("✓", fg="green") if is_completed else click.style("○", fg="white")
+        status = (
+            click.style("✓", fg="green")
+            if is_completed
+            else click.style("○", fg="white")
+        )
         click.echo(f"    {status} {file_name}.{lang_name}")
 
 

@@ -1,4 +1,6 @@
 #include <iostream>
+#include <algorithm>
+#include <vector>
 
 #define let auto
 #define fn auto
@@ -8,4 +10,8 @@ using namespace std;
 fn fastio() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
+}
+
+fn main() -> int {
+
 }
